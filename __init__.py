@@ -1,11 +1,18 @@
-from ctypes import windll, Structure, byref
-from ctypes.wintypes import LONG
+import ctypes
+from ctypes import Structure, byref
+from ctypes.wintypes import LONG, HGDIOBJ, BOOL
 from ansi.colour.rgb import rgb256
 from ansi.colour import fg, bg, fx
 from time import time, sleep
+windll = ctypes.LibraryLoader(ctypes.WinDLL)
+windll.shcore.SetProcessDpiAwareness(2)
+user32 = ctypes.WinDLL("user32", use_last_error=True)
+psapi = ctypes.WinDLL("psapi", use_last_error=True)
+gdi32 = ctypes.WinDLL("gdi32", use_last_error=True)
+gdi32.DeleteObject.argtypes = [HGDIOBJ]
+gdi32.DeleteObject.restypes = BOOL
+DeleteObject = gdi32.DeleteObject
 
-user32 = windll.user32
-gdi32 = windll.gdi32
 LM_BUTTON = 0x01
 RM_BUTTON = 0x02
 
@@ -44,6 +51,11 @@ def get_cursor():
 def get_pixel(x, y, hdc=0):
     dc = user32.GetDC(hdc)
     colorref = gdi32.GetPixel(dc, x, y)
+    try:
+        DeleteObject(dc)
+    except Exception as faq:
+        print(faq)
+        pass
     return colorref
 
 
